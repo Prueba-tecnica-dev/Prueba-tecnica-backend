@@ -4,7 +4,7 @@ API REST para un e-commerce deportivo construida con Node.js, TypeScript, Server
 
 ## Arquitectura
 
-La solución sigue una separación por capas para mantener la lógica ordenada:
+La solución está organizada por capas para mantener el backend limpio y escalable:
 
 - Domain: entidades y contratos de repositorio.
 - Application: casos de uso del negocio (registro, login, carrito, checkout).
@@ -19,46 +19,59 @@ La solución sigue una separación por capas para mantener la lógica ordenada:
 - Docker + Docker Compose
 - npm
 
-## Inicialización
+## 1) Preparación inicial
 
-1. Instala dependencias:
+Ejecutá esto desde la carpeta del proyecto:
 
-   npm install
+```bash
+cd "/home/cesar/Documentos/prueba tecnica backend/sports-ecommerce-api"
+npm install
+cp .env.example .env
+```
 
-2. Levanta DynamoDB Local:
+Ajustá el archivo `.env` con tus valores reales. Si no vas a usar SMTP, podés dejarlo vacío.
 
-   docker compose up -d
+```bash
+JWT_SECRET=mi_secret_super_seguro
+JWT_EXPIRES_IN=1h
+AWS_REGION=us-east-1
+DYNAMODB_ENDPOINT=http://localhost:8000
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_USER=
+SMTP_PASSWORD=
+SMTP_FROM=
+```
 
-3. Crea las tablas de DynamoDB:
+## 2) Levantar infraestructura
 
-   npm run tables:create
+```bash
+docker compose up -d
+```
+```bash
+npm run tables:create
+```
 
-4. Si quieres cargar productos de ejemplo:
+Si querés probar con productos precargados:
 
-   npm run seed:products
+```bash
+npm run seed:products
+```
 
-5. Configura variables de entorno en .env:
+## 3) Levantar la API local
 
-   cp .env.example .env
+```bash
+npm run dev
+```
 
-   Ajusta al menos:
-   - JWT_SECRET
-   - SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, SMTP_FROM (opcional para emails reales)
+La API queda disponible en:
 
-6. Inicia la API local:
-
-   npm run dev
-
-La API quedará disponible en:
 - http://localhost:3000
+- Lambda local: http://localhost:4000
 
-## Auth
+## 4) Flujo de prueba rápido (copiar y pegar)
 
-### Registrar usuario
-
-POST /api/auth/register
-
-curl:
+### A. Registrar usuario
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
@@ -70,31 +83,7 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-Body:
-
-{
-  "name": "Ana",
-  "email": "ana@test.com",
-  "password": "123456"
-}
-
-Respuesta esperada:
-
-{
-  "message": "User registered",
-  "user": {
-    "id": "...",
-    "name": "Ana",
-    "email": "ana@test.com",
-    "createdAt": "..."
-  }
-}
-
-### Login
-
-POST /api/auth/login
-
-curl:
+### B. Login para obtener JWT
 
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
@@ -105,15 +94,115 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
-Body:
+Guardá el token que devuelve la respuesta. Por ejemplo:
 
+```bash
+TOKEN="<token_devuelto_en_accessToken>"
+```
+
+### C. Ver perfil autenticado
+
+```bash
+curl -X GET http://localhost:3000/api/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### D. Ver productos
+
+```bash
+curl -X GET "http://localhost:3000/api/products?category=running&page=1&limit=10"
+```
+
+### E. Ver carrito
+
+```bash
+curl -X GET http://localhost:3000/api/cart \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### F. Agregar producto al carrito
+
+Primero obtené un productId válido de la respuesta de /api/products.
+
+```bash
+PRODUCT_ID="<product_id_de_la_lista>"
+
+curl -X POST http://localhost:3000/api/cart \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "'$PRODUCT_ID'",
+    "quantity": 1
+  }'
+```
+
+### G. Eliminar un producto del carrito
+
+```bash
+curl -X DELETE "http://localhost:3000/api/cart/$PRODUCT_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### H. Checkout
+
+```bash
+curl -X POST http://localhost:3000/api/checkout \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+### I. Ver historial de compras
+
+```bash
+curl -X GET http://localhost:3000/api/purchases \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 5) Endpoints disponibles
+
+### Auth
+
+- POST /api/auth/register
+- POST /api/auth/login
+- GET /api/me
+
+### Productos
+
+- GET /api/products
+
+### Carrito
+
+- GET /api/cart
+- POST /api/cart
+- DELETE /api/cart/{productId}
+
+### Checkout
+
+- POST /api/checkout
+
+### Compras
+
+- GET /api/purchases
+
+## 6) Respuestas esperadas
+
+### Registro
+
+```json
 {
-  "email": "ana@test.com",
-  "password": "123456"
+  "message": "User registered",
+  "user": {
+    "id": "...",
+    "name": "Ana",
+    "email": "ana@test.com",
+    "createdAt": "..."
+  }
 }
+```
 
-Respuesta esperada:
+### Login
 
+```json
 {
   "message": "Login successful",
   "accessToken": "eyJ...",
@@ -123,41 +212,11 @@ Respuesta esperada:
     "email": "ana@test.com"
   }
 }
-
-### Perfil autenticado
-
-GET /api/me
-
-curl:
-
-```bash
-curl -X GET http://localhost:3000/api/me \
-  -H "Authorization: Bearer <token>"
 ```
 
-Headers:
+### Productos
 
-Authorization: Bearer <token>
-
-## Productos
-
-### Listar productos
-
-GET /api/products?category=running&page=1&limit=10
-
-curl:
-
-```bash
-curl -X GET "http://localhost:3000/api/products?category=running&page=1&limit=10"
-```
-
-Parámetros:
-- category: filtro opcional por categoría
-- page: número de página
-- limit: cantidad por página
-
-Respuesta esperada:
-
+```json
 {
   "page": 1,
   "limit": 10,
@@ -175,89 +234,46 @@ Respuesta esperada:
     }
   ]
 }
-
-## Carrito
-
-### Obtener carrito
-
-GET /api/cart
-
-curl:
-
-```bash
-curl -X GET http://localhost:3000/api/cart \
-  -H "Authorization: Bearer <token>"
 ```
 
-Headers:
+### Checkout
 
-Authorization: Bearer <token>
-
-### Agregar producto
-
-POST /api/cart
-
-curl:
-
-```bash
-curl -X POST http://localhost:3000/api/cart \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "productId": "<product-id>",
-    "quantity": 1
-  }'
-```
-
-Headers:
-
-Authorization: Bearer <token>
-
-Body:
-
+```json
 {
-  "productId": "...",
-  "quantity": 1
+  "message": "Checkout successful",
+  "order": {
+    "id": "...",
+    "total": 199.98,
+    "items": [
+      {
+        "productId": "...",
+        "quantity": 1
+      }
+    ]
+  }
 }
-
-### Eliminar producto
-
-DELETE /api/cart/{productId}
-
-curl:
-
-```bash
-curl -X DELETE http://localhost:3000/api/cart/<product-id> \
-  -H "Authorization: Bearer <token>"
 ```
 
-Headers:
+## 7) Observaciones
 
-Authorization: Bearer <token>
+- El guardado de productos y compras se hace contra DynamoDB Local.
+- La autenticación usa JWT en el header Authorization.
+- El checkout valida stock, carrito activo y genera historial de compra.
+- Si SMTP está configurado, se envía correo de confirmación.
 
-## Checkout
+## 8) Troubleshooting
 
-### Finalizar compra
-
-POST /api/checkout
-
-curl:
+Si aparece un error como `Cannot find module .../src/handlers/...` o rutas viejas de `dist`, cerrá todas las instancias de `serverless offline` y volvé a levantarlas con:
 
 ```bash
-curl -X POST http://localhost:3000/api/checkout \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json"
+pkill -f "serverless offline" || true
+pkill -f "node .*serverless" || true
+rm -rf .serverless
+npm run dev
 ```
 
-Headers:
+Eso limpia la caché del runtime local y fuerza la configuración nueva.
 
-Authorization: Bearer <token>
-
-Validaciones:
-- stock disponible
-- carrito no vacío
-- historial de compra registrado
-- email de confirmación enviado si SMTP está configurado
 
 Respuesta esperada:
 
