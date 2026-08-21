@@ -7,22 +7,44 @@ import { dynamoDb } from "./dynamodb.client";
 
 const tables = [
   {
-    TableName: "Users",
+  TableName: "Users",
 
-    KeySchema: [
-      {
-        AttributeName: "id",
-        KeyType: "HASH" as const,
-      },
-    ],
+  KeySchema: [
+    {
+      AttributeName: "id",
+      KeyType: "HASH" as const,
+    },
+  ],
 
-    AttributeDefinitions: [
-      {
-        AttributeName: "id",
-        AttributeType: "S" as const,
+  AttributeDefinitions: [
+    {
+      AttributeName: "id",
+      AttributeType: "S" as const,
+    },
+
+    {
+      AttributeName: "email",
+      AttributeType: "S" as const,
+    },
+  ],
+
+  GlobalSecondaryIndexes: [
+    {
+      IndexName: "EmailIndex",
+
+      KeySchema: [
+        {
+          AttributeName: "email",
+          KeyType: "HASH" as const,
+        },
+      ],
+
+      Projection: {
+        ProjectionType: "ALL" as const,
       },
-    ],
-  },
+    },
+  ],
+},
 
   {
     TableName: "Products",
@@ -84,16 +106,19 @@ async function createTable(
 ): Promise<void> {
   try {
     await dynamoDb.send(
-      new CreateTableCommand({
-        TableName: table.TableName,
+        new CreateTableCommand({
+            TableName: table.TableName,
 
-        BillingMode: "PAY_PER_REQUEST",
+            BillingMode: "PAY_PER_REQUEST",
 
-        KeySchema: table.KeySchema,
+            KeySchema: table.KeySchema,
 
-        AttributeDefinitions:
-          table.AttributeDefinitions,
-      }),
+            AttributeDefinitions:
+                table.AttributeDefinitions,
+
+            GlobalSecondaryIndexes:
+                table.GlobalSecondaryIndexes,
+        }),
     );
 
     console.log(`✓ ${table.TableName} created`);

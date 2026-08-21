@@ -12,6 +12,7 @@
   "keywords": [],
   "type": "commonjs",
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/uuid": "^10.0.0",
