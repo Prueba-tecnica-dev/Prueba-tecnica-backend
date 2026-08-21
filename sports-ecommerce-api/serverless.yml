@@ -1,0 +1,110 @@
+service: sports-ecommerce-api
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${env:AWS_REGION, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  memorySize: 512
+  timeout: 30
+  environment:
+    NODE_ENV: ${env:NODE_ENV, 'development'}
+    AWS_REGION: ${env:AWS_REGION, 'us-east-1'}
+    DYNAMODB_ENDPOINT: ${env:DYNAMODB_ENDPOINT, 'http://localhost:8000'}
+    JWT_SECRET: ${env:JWT_SECRET, 'development-secret'}
+    JWT_EXPIRES_IN: ${env:JWT_EXPIRES_IN, '1h'}
+    SMTP_HOST: ${env:SMTP_HOST, ''}
+    SMTP_PORT: ${env:SMTP_PORT, '587'}
+    SMTP_USER: ${env:SMTP_USER, ''}
+    SMTP_PASSWORD: ${env:SMTP_PASSWORD, ''}
+    SMTP_FROM: ${env:SMTP_FROM, ''}
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3000
+    lambdaPort: 4000
+    noPrependStageInUrl: true
+
+functions:
+  index:
+    handler: dist/src/handlers/index.handler.js
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true
+
+  register:
+    handler: dist/src/handlers/auth.handler.js
+    events:
+      - http:
+          path: /api/auth/register
+          method: post
+          cors: true
+
+  login:
+    handler: dist/src/handlers/auth.handler.js
+    events:
+      - http:
+          path: /api/auth/login
+          method: post
+          cors: true
+
+  products:
+    handler: dist/src/handlers/products.handler.js
+    events:
+      - http:
+          path: /api/products
+          method: get
+          cors: true
+
+  addToCart:
+    handler: dist/src/handlers/cart.handler.js
+    events:
+      - http:
+          path: /api/cart
+          method: post
+          cors: true
+
+  getCart:
+    handler: dist/src/handlers/cart.handler.js
+    events:
+      - http:
+          path: /api/cart
+          method: get
+          cors: true
+
+  removeFromCart:
+    handler: dist/src/handlers/cart.handler.js
+    events:
+      - http:
+          path: /api/cart/{productId}
+          method: delete
+          cors: true
+
+  checkout:
+    handler: dist/src/handlers/checkout.handler.js
+    events:
+      - http:
+          path: /api/checkout
+          method: post
+          cors: true
+
+  purchases:
+    handler: dist/src/handlers/purchases.handler.js
+    events:
+      - http:
+          path: /api/purchases
+          method: get
+          cors: true
+
+  me:
+    handler: dist/src/handlers/auth.handler.js
+    events:
+      - http:
+          path: /api/me
+          method: get
+          cors: true

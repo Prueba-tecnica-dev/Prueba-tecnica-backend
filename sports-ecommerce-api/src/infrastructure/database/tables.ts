@@ -5,97 +5,53 @@ import {
 
 import { dynamoDb } from "./dynamodb.client";
 
-const tables = [
+const tables: Array<{
+  TableName: string;
+  KeySchema: Array<{ AttributeName: string; KeyType: "HASH" | "RANGE" }>;
+  AttributeDefinitions: Array<{ AttributeName: string; AttributeType: "S" | "N" | "B" }>;
+  GlobalSecondaryIndexes?: Array<{
+    IndexName: string;
+    KeySchema: Array<{ AttributeName: string; KeyType: "HASH" | "RANGE" }>;
+    Projection: { ProjectionType: "ALL" | "KEYS_ONLY" | "INCLUDE" };
+  }>;
+}> = [
   {
-  TableName: "Users",
-
-  KeySchema: [
-    {
-      AttributeName: "id",
-      KeyType: "HASH" as const,
-    },
-  ],
-
-  AttributeDefinitions: [
-    {
-      AttributeName: "id",
-      AttributeType: "S" as const,
-    },
-
-    {
-      AttributeName: "email",
-      AttributeType: "S" as const,
-    },
-  ],
-
-  GlobalSecondaryIndexes: [
-    {
-      IndexName: "EmailIndex",
-
-      KeySchema: [
-        {
-          AttributeName: "email",
-          KeyType: "HASH" as const,
-        },
-      ],
-
-      Projection: {
-        ProjectionType: "ALL" as const,
+    TableName: "Users",
+    KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+    AttributeDefinitions: [
+      { AttributeName: "id", AttributeType: "S" },
+      { AttributeName: "email", AttributeType: "S" },
+    ],
+    GlobalSecondaryIndexes: [
+      {
+        IndexName: "EmailIndex",
+        KeySchema: [{ AttributeName: "email", KeyType: "HASH" }],
+        Projection: { ProjectionType: "ALL" },
       },
-    },
-  ],
-},
-
+    ],
+  },
   {
     TableName: "Products",
-
-    KeySchema: [
-      {
-        AttributeName: "id",
-        KeyType: "HASH" as const,
-      },
-    ],
-
-    AttributeDefinitions: [
-      {
-        AttributeName: "id",
-        AttributeType: "S" as const,
-      },
-    ],
+    KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
+    AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
   },
-
   {
     TableName: "Carts",
-
-    KeySchema: [
-      {
-        AttributeName: "userId",
-        KeyType: "HASH" as const,
-      },
-    ],
-
-    AttributeDefinitions: [
-      {
-        AttributeName: "userId",
-        AttributeType: "S" as const,
-      },
-    ],
+    KeySchema: [{ AttributeName: "userId", KeyType: "HASH" }],
+    AttributeDefinitions: [{ AttributeName: "userId", AttributeType: "S" }],
   },
-
   {
     TableName: "Purchases",
-
-    KeySchema: [
-      {
-        AttributeName: "id",
-        KeyType: "HASH" as const,
-      },
-    ],
-
+    KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
     AttributeDefinitions: [
+      { AttributeName: "id", AttributeType: "S" },
+      { AttributeName: "userId", AttributeType: "S" },
+    ],
+    GlobalSecondaryIndexes: [
       {
-        AttributeName: "id",
-        AttributeType: "S" as const,
+        IndexName: "UserIdIndex",
+        KeySchema: [{ AttributeName: "userId", KeyType: "HASH" }],
+        Projection: { ProjectionType: "ALL" },
       },
     ],
   },
