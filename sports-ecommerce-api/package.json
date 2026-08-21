@@ -4,17 +4,22 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "serveless offline",
+    "dev": "npm run build && serverless offline --stage dev",
     "build": "tsc",
     "tables:create": "tsx src/infrastructure/database/tables.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed:products": "tsx scripts/seed-products.ts",
+    "test": "tsx --test"
   },
   "keywords": [],
   "type": "commonjs",
   "devDependencies": {
+    "@types/aws-lambda": "^8.10.162",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.2.0",
     "@types/nodemailer": "^8.0.1",
     "@types/uuid": "^10.0.0",
+    "serverless": "^3.40.0",
+    "serverless-esbuild": "^1.57.2",
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   },
@@ -26,7 +31,6 @@
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^9.0.5",
-    "serverless": "^4.41.0",
     "serverless-offline": "^14.8.0",
     "uuid": "^14.0.2",
     "winston": "^3.19.0",
