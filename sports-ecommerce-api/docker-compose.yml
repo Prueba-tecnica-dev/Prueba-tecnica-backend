@@ -1,0 +1,14 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: sports-carts-dynamodb
+
+    command: >
+      -jar DynamoDBLocal.jar
+      -inMemory
+      -sharedDb
+
+    ports:
+      - "8000:8000"
+
+    restart: unless-stopped
